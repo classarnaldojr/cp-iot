@@ -423,6 +423,16 @@ void handleNotFound() {
   server.send(404, "application/json", buildErrorJson("Rota nao encontrada"));
 }
 
+bool configureCors(WebServer &server, std::function<bool()> next)
+{
+  Serial.println("Request received: " + server.uri());
+  server.sendHeader("Access-Control-Max-Age", "10000");
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "*");
+  return next();
+}
+
 // =========================
 // SETUP
 // =========================
@@ -441,8 +451,10 @@ void setup() {
   // WiFi
   connectWiFi();
 
- // Rotas da API
-
+  // Middlewares
+  server.addMiddleware(configureCors);
+ 
+  // Rotas da API
   server.on("/", sendHtml);                   
   
   server.on("/api/weather", HTTP_GET, []() {
